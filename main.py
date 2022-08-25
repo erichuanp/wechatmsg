@@ -2,8 +2,11 @@ import datetime
 import requests
 import urllib.parse
 import wxauto
-# 海珠
+from zhdate import ZhDate
 
+# 对象
+OBJ = 'PCPC'
+# 海珠
 url1 = 'https://tianqi.moji.com/weather/china/guangdong/haizhu-district'
 # 南山
 url2 = 'https://tianqi.moji.com/weather/china/guangdong/nanshan-district'
@@ -12,9 +15,7 @@ url3 = 'https://tianqi.moji.com/weather/united%20states/california/sandiego'
 
 
 def GetWeather(url):
-    print('正在访问' + url)
     response = requests.get(url)
-    print('访问结束...')
     response.encoding = 'utf-8'
     response = response.text
 
@@ -44,14 +45,23 @@ def GetWeather(url):
     ws = response[ws1:ws2]
 
     return '''今日''' + loc + tq + '''
-气温：''' + tem + '''    风速：''' + wind + ws
+气温：''' + tem + '''
+风速：''' + wind + ws
 
 
 def GetToday():
     global sentToday
     sentToday = True
-    return '''早上好JOJO！今天是''' + str(datetime.date.today()) + '''！
-您的替身 Stone Free 为您报告
+    today = datetime.datetime.today()
+    zhtoday = ZhDate.from_datetime(today)
+    dstart = datetime.datetime(2017,9,26)
+    itv = today - dstart
+    return '''早上好JOJO！💪今天是
+🥰爱你的第''' + str(itv.days) + '''天
+🌞''' + today.strftime('%Y %B %d') + ' ' + today.strftime('%A') + '''
+🌜''' + zhtoday.chinese()[5:] + '''
+
+替身 Stone Free 为您报告⛅
 ''' + GetWeather(url1) + '''
 ''' + GetWeather(url2) + '''
 ''' + GetWeather(url3) + '''
@@ -114,7 +124,7 @@ def GetWord(msg):
     return rtn.replace('&lt;', '<').replace('&gt;', '>')
 
 def callPC(msg):
-    wx.ChatWith('加把劲SAKANA骑士')
+    wx.ChatWith('PCPC')
     wxauto.WxUtils.SetClipboard(msg)
     for i in range(10):
         wx.SendClipboard()
@@ -123,14 +133,32 @@ def callPC(msg):
 
 
 def GenReply(msg):
-    if msg == 'jt':
+    if msg == '/今天':
         rtn = GetToday()
-    elif msg == 'pc':
+    elif msg == '/彭川':
         callPC('快点回复雨洁！！！')
         rtn = '我已经帮您叫了他十次。'
-    elif msg == '索爱口令':
+    elif msg == '/索爱':
         callPC('说！你爱不爱周雨洁！')
-        rtn = '作为您的替身，我负责任地告诉你，哪怕他再怎么说讨厌你，他都是爱你的。'
+        rtn = '作为您的替身，我负责任地告诉你：哪怕他闹脾气，再怎么说讨厌你，他都是爱你的。'
+    elif msg == '/帮助':
+        rtn = '''使用指南：
+替身只会在空闲期间持续读取JOJO发的最新一条消息，因此请在替身完成上一个任务之后，再下达新的指令。除了翻译功能会回复两条消息（链接+翻译）之外，其他的功能都会在任务完成后回复一条消息。在等待翻译功能的第二条消息期间，可以点开链接来查看详情。
+
+我可以做到的事情：(1) 从聊天列表里选取一个人/一个群 (2) 读取聊天记录、发送消息/文件/微信截图 (3) 访问公共互联网获取信息(用以保存/计算/发送)
+
+现可公开指令：
+/今天  发送每日消息 也会在每日早上8点自动发出
+/彭川  呼叫彭川以尽快回复JOJO
+/索爱  呼叫彭川以尽快表白JOJO
+/帮助  调出使用指南
+/关闭  关闭替身
+
+更多功能请向彭川提出...
+只要是可以从网上扒拉下来的信息都可以做哦
+'''
+    elif msg == '/关闭':
+        raise TypeError("人为关闭")
     else:
         rtn = GetWord(msg)
     return rtn
@@ -139,20 +167,28 @@ def GenReply(msg):
 wx = wxauto.WeChat()
 wx.GetSessionList()
 # 定位到目标
-OBJ = 'JOJO'
 wx.ChatWith(OBJ)
 sentToday = False
 thisDay = 0
-while True:
-    now = datetime.datetime.now()
-    latest = wx.GetLastMessage
-    if not sentToday and now.hour == 8:
-        wxauto.WxUtils.SetClipboard(GenReply('jt'))
-        wx.SendClipboard()
-        thisDay = now.day
-    elif thisDay < now.day:
-        sentToday = False
+wx.SendMsg('您的替身初始化完毕，如需帮助请发送 /帮助')
+try:
+    while True:
+        now = datetime.datetime.now()
+        latest = wx.GetLastMessage
+        if not sentToday and now.hour == 8:
+            wxauto.WxUtils.SetClipboard(GenReply('jt'))
+            wx.SendClipboard()
+            thisDay = now.day
+        elif thisDay < now.day:
+            sentToday = False
 
-    if latest[0] == OBJ:
-        wxauto.WxUtils.SetClipboard(GenReply(latest[1]))
-        wx.SendClipboard()
+        if latest[0] == OBJ:
+            wxauto.WxUtils.SetClipboard(GenReply(latest[1]))
+            wx.SendClipboard()
+except Exception as e:
+    wxauto.WxUtils.SetClipboard('''出现错误：
+''' + str(e) + '''
+您的替身已下线，请联系彭川修复或启动！''')
+    wx.SendClipboard()
+
+
