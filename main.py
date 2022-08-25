@@ -1,9 +1,9 @@
 import datetime
 import requests
-from wxauto import *
 import urllib.parse
-
+import wxauto
 # 海珠
+
 url1 = 'https://tianqi.moji.com/weather/china/guangdong/haizhu-district'
 # 南山
 url2 = 'https://tianqi.moji.com/weather/china/guangdong/nanshan-district'
@@ -72,12 +72,12 @@ def GetWord(msg):
 '''
             i+=1
         urlw = 'https://www.youdao.com/result?word=' + urllib.parse.quote(msg) + '&lang=en'
-        WxUtils.SetClipboard(urlw)
+        wxauto.WxUtils.SetClipboard(urlw)
         wx.SendClipboard()
         return rtn.replace("'", "")
 
     urlw = 'https://www.youdao.com/result?word=' + urllib.parse.quote(msg) + '&lang=en'
-    WxUtils.SetClipboard(urlw)
+    wxauto.WxUtils.SetClipboard(urlw)
     wx.SendClipboard()
     response = requests.get(urlw)
     response.encoding = 'uft-8'
@@ -108,14 +108,14 @@ def GetWord(msg):
         rtn += '翻译内容：' + response[response.find('>') + 1:response.find('</')] + ' '
 
     if rtn == '':
-        WxUtils.SetClipboard("您输入的是：" + msg)
+        wxauto.WxUtils.SetClipboard("您输入的是：" + msg)
         wx.SendClipboard()
         return '翻译失败！请发送有效词！'
     return rtn.replace('&lt;', '<').replace('&gt;', '>')
 
 def callPC(msg):
     wx.ChatWith('加把劲SAKANA骑士')
-    WxUtils.SetClipboard(msg)
+    wxauto.WxUtils.SetClipboard(msg)
     for i in range(10):
         wx.SendClipboard()
     wx.ChatWith(OBJ)
@@ -135,9 +135,8 @@ def GenReply(msg):
         rtn = GetWord(msg)
     return rtn
 
-
 # 读取微信会话
-wx = WeChat()
+wx = wxauto.WeChat()
 wx.GetSessionList()
 # 定位到目标
 OBJ = 'JOJO'
@@ -148,12 +147,12 @@ while True:
     now = datetime.datetime.now()
     latest = wx.GetLastMessage
     if not sentToday and now.hour == 8:
-        WxUtils.SetClipboard(GenReply('jt'))
+        wxauto.WxUtils.SetClipboard(GenReply('jt'))
         wx.SendClipboard()
         thisDay = now.day
     elif thisDay < now.day:
         sentToday = False
 
     if latest[0] == OBJ:
-        WxUtils.SetClipboard(GenReply(latest[1]))
+        wxauto.WxUtils.SetClipboard(GenReply(latest[1]))
         wx.SendClipboard()
